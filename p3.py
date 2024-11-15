@@ -20,6 +20,7 @@ def value_iteration(problem):
     
     # Map to store V(s)
     V = {}
+    policy = {}  # Policy map
     
     # Map to store the type of each cell
     # Also, collect all the states
@@ -51,23 +52,7 @@ def value_iteration(problem):
         for state in states:
             if state in terminal_states:
                 V_new[state] = terminal_states[state]
-            else:
-                max_value = float('-inf')
-                for a in actions:
-                    value = 0.0
-                    transitions = get_transitions(state, a, grid, noise, livingReward, terminal_states)
-                    for (prob, next_state, reward) in transitions:
-                        value += prob * (reward + discount * V[next_state])
-                    if value > max_value:
-                        max_value = value
-                V_new[state] = max_value
-        V = copy.deepcopy(V_new)
-        
-        # After updating V, compute policy
-        policy = {}
-        for state in states:
-            if state in terminal_states:
-                policy[state] = 'x'
+                policy[state] = 'x'  # Terminal states have no policy
             else:
                 max_value = float('-inf')
                 best_action = None
@@ -79,13 +64,16 @@ def value_iteration(problem):
                     if value > max_value:
                         max_value = value
                         best_action = a
+                V_new[state] = max_value
                 policy[state] = best_action
+        V = copy.deepcopy(V_new)
         
         # Format and append the outputs
         return_value += f"V_k={k+1}\n"
         return_value += format_values(V, grid) + '\n'
         return_value += f"pi_k={k+1}\n"
         return_value += format_policy(policy, grid) + '\n'
+    
     return return_value.strip()  # Remove the trailing newline
 
 def get_transitions(state, action, grid, noise, livingReward, terminal_states):
@@ -151,7 +139,7 @@ def format_values(V, grid):
             if cell == '#':
                 value_str = " ##### "
             else:
-                state = (i,j)
+                state = (i, j)
                 value = V[state]
                 value_str = f"{value:7.2f}"
             row_values.append(value_str)
@@ -170,7 +158,7 @@ def format_policy(policy, grid):
             if cell == '#':
                 value_str = " # "
             else:
-                state = (i,j)
+                state = (i, j)
                 action = policy.get(state, '')
                 value_str = f" {action} "
             row_values.append(value_str)
