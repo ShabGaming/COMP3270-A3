@@ -1,4 +1,5 @@
 import sys, grader, parse
+import copy
 
 def value_iteration(problem):
     # Extract parameters from problem
@@ -13,9 +14,9 @@ def value_iteration(problem):
     cols = len(grid[0]) if rows > 0 else 0
     
     # Actions
-    actions = ['N', 'E', 'S', 'W']
-    action_indices = {'N': 0, 'E': 1, 'S': 2, 'W': 3}
-    directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]  # N, E, S, W
+    actions = ['N', 'S', 'W', 'E']
+    action_indices = {'N': 0, 'S': 1, 'W': 2, 'E': 3}
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # N, S, W, E
     
     # Map to store V(s)
     V = {}
@@ -36,18 +37,17 @@ def value_iteration(problem):
     for i in range(rows):
         for j in range(cols):
             cell = grid[i][j]
-            if cell == '1' or cell == '-1':
+            if isinstance(cell, str) and cell.isnumeric():
                 reward = float(cell)
-                terminal_states[(i,j)] = reward
-                V[(i,j)] = reward  # Set V(s) = reward for terminal states
+                terminal_states[(i, j)] = reward
     
     return_value = ''
     # Output V_k=0
     return_value += f"V_k=0\n"
     return_value += format_values(V, grid) + '\n'
     
-    for k in range(iterations - 1):
-        V_new = V.copy()
+    for k in range(iterations):
+        V_new = copy.deepcopy(V)
         for state in states:
             if state in terminal_states:
                 V_new[state] = terminal_states[state]
@@ -61,7 +61,7 @@ def value_iteration(problem):
                     if value > max_value:
                         max_value = value
                 V_new[state] = max_value
-        V = V_new.copy()
+        V = copy.deepcopy(V_new)
         
         # After updating V, compute policy
         policy = {}
@@ -89,9 +89,9 @@ def value_iteration(problem):
     return return_value.strip()  # Remove the trailing newline
 
 def get_transitions(state, action, grid, noise, livingReward, terminal_states):
-    actions = ['N', 'E', 'S', 'W']
-    action_indices = {'N': 0, 'E': 1, 'S': 2, 'W': 3}
-    directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+    actions = ['N', 'S', 'W', 'E']
+    action_indices = {'N': 0, 'S': 1, 'W': 2, 'E': 3}
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     
     intended_index = action_indices[action]
     intended_direction = directions[intended_index]
@@ -149,7 +149,7 @@ def format_values(V, grid):
         for j in range(cols):
             cell = grid[i][j]
             if cell == '#':
-                value_str = "#####"
+                value_str = " ##### "
             else:
                 state = (i,j)
                 value = V[state]
@@ -157,8 +157,6 @@ def format_values(V, grid):
             row_values.append(value_str)
         formatted_row = "|{}|".format('||'.join(row_values))
         formatted_rows.append(formatted_row)
-    # Do not reverse the rows
-    # formatted_rows = formatted_rows[::-1]
     return '\n'.join(formatted_rows)
 
 def format_policy(policy, grid):
@@ -174,17 +172,10 @@ def format_policy(policy, grid):
             else:
                 state = (i,j)
                 action = policy.get(state, '')
-                if action == None:
-                    value_str = "   "
-                elif action == 'N' or action == 'E' or action == 'S' or action == 'W':
-                    value_str = f" {action} "
-                else:
-                    value_str = f" {action} "
+                value_str = f" {action} "
             row_values.append(value_str)
         formatted_row = "|{}|".format('||'.join(row_values))
         formatted_rows.append(formatted_row)
-    # Do not reverse the rows
-    # formatted_rows = formatted_rows[::-1]
     return '\n'.join(formatted_rows)
 
 if __name__ == "__main__":
